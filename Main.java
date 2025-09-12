@@ -8,10 +8,9 @@
 public class Main {
     public static void main(String[] args) {
         // Create 2 accounts
-        BankAccount[] accounts = { new BankAccount(1), new BankAccount(2) };
-
+        BankAccount[] accounts = { new BankAccount(1, 0), new BankAccount(2, 0) };
         
-        }
+        
 
     }
 }
