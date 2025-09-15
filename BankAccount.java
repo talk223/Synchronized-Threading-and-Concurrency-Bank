@@ -5,8 +5,8 @@ public class BankAccount {
     private final int accountId;
     private int balance;
     private final Lock lock = new ReentrantLock();
+    
     private final Condition sufficientFunds = lock.newCondition();
-
 
     public BankAccount(int accountId, int initialBalance) {
         this.accountId = accountId;
@@ -19,6 +19,10 @@ public class BankAccount {
 
     public int getBalance() {
         return balance;
+    }
+
+    public Lock getLock() {
+        return lock;
     }
 
     public void deposit(int amount){
@@ -40,6 +44,7 @@ public class BankAccount {
                     System.out.println("Insufficient funds for withdrawal of " + amount + " from Account " + accountId + ". Waiting for deposit...");
                     try {
                         sufficientFunds.await();
+
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         return;
