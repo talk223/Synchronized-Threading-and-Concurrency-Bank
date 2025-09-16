@@ -1,0 +1,153 @@
+boolean transferred = false;
+        while (!transferred) {
+            int fromIndex = random.nextInt(accounts.length);
+            int toIndex;
+            do {
+                toIndex = random.nextInt(accounts.length);
+            } while (toIndex == fromIndex); 
+
+            int amount = random.nextInt(200) + 1; // Transfer between $1 and $200
+
+            BankAccount fromAccount = accounts[fromIndex];
+            BankAccount toAccount = accounts[toIndex];
+
+            boolean fromLocked = fromAccount.getLock().tryLock();
+            boolean toLocked = false;
+            if (fromLocked) {
+                try {
+                    toLocked = toAccount.getLock().tryLock();
+                    if (toLocked) {
+                        try {
+                            if (fromAccount.getBalance() >= amount) {
+                                performAtomicTransfer(fromAccount, toAccount, amount);
+                                System.out.printf("Transfer Agent %d transferred $%d from Account %d to Account %d.%n",
+                                        agentId, amount, fromAccount.getAccountId(), toAccount.getAccountId());
+                            } 
+                            else {
+                                System.out.printf("Transfer Agent %d failed to transfer $%d from Account %d to Account %d due to insufficient funds.%n",
+                                        agentId, amount, fromAccount.getAccountId(), toAccount.getAccountId());
+                            }
+
+                            transferred = true;
+                        } finally {
+                            toAccount.getLock().unlock();
+                        }
+                    }
+                } finally {
+                    fromAccount.getLock().unlock();
+                }
+            }
+            if (!transferred) {
+                // Could not acquire both locks, wait and try again
+                try {
+                    Thread.sleep(random.nextInt(MAXSLEEP) + 1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        }
+    }
+
+    // Helper for atomic transfer using reflection
+    static void performAtomicTransfer(BankAccount from, BankAccount to, int amount) {
+        try {
+            java.lang.reflect.Field balanceField = BankAccount.class.getDeclaredField("balance");
+            balanceField.setAccessible(true);
+            int fromBalance = (int) balanceField.get(from);
+            if (fromBalance >= amount) {
+                balanceField.set(from, fromBalance - amount);
+                int toBalance = (int) balanceField.get(to);
+                balanceField.set(to, toBalance + amount);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+this is for internal audit
+     try {
+                Thread.sleep(random.nextInt(MAXSLEEP) + 1);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+
+            List<java.util.concurrent.locks.Lock> acquiredLocks = new java.util.ArrayList<>(); // arraylist of locks. this is to keep track of locks acquired so far
+            boolean allLocked = true;
+            
+            for (int i = 0; i < accounts.length; i++) {
+                if (accounts[i].getLock().tryLock()) {
+                    acquiredLocks.add(accounts[i].getLock());
+                } else {
+                    allLocked = false;
+                    break;
+                }
+            }
+
+            if (allLocked) {
+                try {
+                    System.out.println("Audit " + auditId + " - Account Balances:");
+                    
+                    for (int i = 0; i < accounts.length; i++) {
+                        System.out.printf("Account %d: $%d%n", accounts[i].getAccountId(), accounts[i].getBalance());
+                    }
+                    System.out.println("-----------------------------");
+                } 
+                finally {
+                    // Release all locks
+                    for (int i = 0; i < acquiredLocks.size(); i++) {
+                        acquiredLocks.get(i).unlock();
+                    }
+                }
+            } else {
+
+                for (int i = 0; i < acquiredLocks.size(); i++) {
+                    acquiredLocks.get(i).unlock();
+                }
+                // Try again later
+                continue;
+            }
+
+
+treasury crap
+             try {
+                List<java.util.concurrent.locks.Lock> acquiredLocks = new java.util.ArrayList<>(); //similar to what i did in InternalAudit.java
+                // Try to acquire all locks
+                boolean allLocked = true;
+
+                for (int i = 0; i < accounts.length; i++) {
+                    if (accounts[i].getLock().tryLock()) {
+                        acquiredLocks.add(accounts[i].getLock());
+                    } else {
+                        allLocked = false;
+                        break;
+                    }
+                }
+
+                if (allLocked) {
+                    try {
+                        int totalBalance = 0;
+                        for (int i = 0; i < accounts.length; i++) {
+                            totalBalance += accounts[i].getBalance();
+                        }
+                        System.out.printf("Treasury %d - Total Bank Balance: $%d%n", treasuryId, totalBalance);
+                    } finally {
+                        // Release all locks
+                        for (int i = 0; i < acquiredLocks.size(); i++) {
+                            System.out.println("am i here?");
+                            acquiredLocks.get(i).unlock();
+                        }
+                    }
+                } else {
+                    // Release any locks acquired so far
+                    for (int i = 0; i < acquiredLocks.size(); i++) {
+                        acquiredLocks.get(i).unlock();
+                    }
+
+                }
+                Thread.sleep(random.nextInt(MAXSLEEP) + 1);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
