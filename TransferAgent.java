@@ -10,7 +10,7 @@ public class TransferAgent implements Runnable {
     public TransferAgent(int agentId, BankAccount[] accounts) {
         this.agentId = agentId;
         this.accounts = accounts;
-        this.MAXSLEEP = 1400;
+        this.MAXSLEEP = 2500;
     }
 
     @Override

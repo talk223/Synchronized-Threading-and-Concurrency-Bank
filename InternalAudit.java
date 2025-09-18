@@ -9,28 +9,38 @@ public class InternalAudit implements Runnable {
     private final Random random = new Random();
 
     public InternalAudit(int auditId, BankAccount[] accounts) {
-        this.auditId = auditId; //the auditors id
+        this.auditId = auditId; 
         this.accounts = accounts;
-        this.MAXSLEEP = 1600; 
+        this.MAXSLEEP = 3000; 
     }
 
     @Override
     public void run() {
+        //im doing this bc this kept running before other threads started
+        try {
+            Thread.sleep(2000); 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+        
         while (true) {
             try {
-                System.out.println("Internal Audit " + auditId + " is running...");
-
-                int totalBalance = 0;
+                System.out.println("*****************************************************************************\n\n");
+                System.out.println("Internal Bank Audit beginning...\n");
 
                 for (int i = 0; i < accounts.length; i++) {
                     accounts[i].internalAudit(auditId);
-                    totalBalance += accounts[i].getBalance(); 
+                 
                 }
 
-                System.out.println("Audit " + auditId + " total balance across all accounts: " + totalBalance);
+                System.out.println("\nInternal Bank Audit complete.\n\n");
+                System.out.println("*****************************************************************************\n\n");
+                
 
                 Thread.sleep(random.nextInt(MAXSLEEP) + 1);
                 Thread.yield();
+
 
             } catch (Exception e) {
                 Thread.currentThread().interrupt();

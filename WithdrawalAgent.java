@@ -11,7 +11,7 @@ public class WithdrawalAgent implements Runnable {
     public WithdrawalAgent(int agentId, BankAccount[] accounts) {
         this.agentId = agentId;
         this.accounts = accounts;
-        this.MAXSLEEP = 1000;
+        this.MAXSLEEP = 500;
     }
 
     @Override
@@ -23,7 +23,7 @@ public class WithdrawalAgent implements Runnable {
 
                 accounts[accountIndex].withdraw(amount, agentId);
 
-                Thread.sleep(random.nextInt(MAXSLEEP) + 1); // Sleep for up to 1000ms
+                Thread.sleep(random.nextInt(MAXSLEEP) + 1);
                 Thread.yield();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

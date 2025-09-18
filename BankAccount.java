@@ -9,6 +9,10 @@ public class BankAccount {
 
     private final Condition sufficientFunds = lock.newCondition();
 
+    private static int transactionNumber = 0;
+    private static int internalTransNumber = 0;
+    private static int treasuryTransNumber = 0;
+
     public BankAccount(int accountId, int initialBalance) {
         this.accountId = accountId;
         this.balance = initialBalance;
@@ -29,8 +33,11 @@ public class BankAccount {
     public void deposit(int amount, int agentId) {
         lock.lock();
         try {
+            transactionNumber++;
             balance += amount;
-            System.out.println("Depositor " + agentId + " deposited " + amount + " to Account " + accountId + ". New balance: " + balance);
+            System.out.println("Agent DT" + agentId + " deposits " + amount + " into: JA-" 
+                + accountId + "\t (+) JA-" + accountId + " balance is $" + balance
+                + "\t\t\t\t\t\t\t\t\t" + transactionNumber + "\n");
             sufficientFunds.signalAll();
         } finally {
             lock.unlock();
@@ -42,7 +49,8 @@ public class BankAccount {
         try {
             while (balance < amount) {
                 try {
-                    System.out.println("Insufficient funds for withdrawal of " + amount + " from Account " + accountId + ". Waiting for deposit...");
+                    System.out.println("\t\t\t\tAgent WT" + agentId + " attempts to withdraw " + amount + " from Account JA-" 
+                        + accountId + " (******) WITHDRAWL BLOCKED - INSUFFICIENT FUNDS!!!! Balance only $" + balance + "\n");
                     sufficientFunds.await();
 
                 } catch (InterruptedException e) {
@@ -51,8 +59,11 @@ public class BankAccount {
                 }
             }
 
+            transactionNumber++;
             balance -= amount;
-            System.out.println("Withdrawer " + agentId + " withdrew " + amount + " from Account " + accountId + ". New balance: " + balance);
+            System.out.println("\t\t\t\tAgent WT" + agentId + " withdraws $" + amount + " from JA-" 
+                + accountId + "\t (-) JA-" + accountId + " balance is $" 
+                + balance + "\t\t\t\t\t" + transactionNumber + "\n");
         } finally {
             lock.unlock();
         }
@@ -107,18 +118,52 @@ public class BankAccount {
         }
     }
 
+
     public void internalAudit(int auditId) {
-    if (lock.tryLock()) {
-        try {
-            System.out.println("Audit " + auditId + " sees Account " + accountId +
-                               " Balance: " + balance);
-        } finally {
-            lock.unlock();
+        int temp = transactionNumber;
+
+        if (lock.tryLock()) {
+            
+            try {
+                if (temp - internalTransNumber != 0) {
+                    System.out.println("The total number of transactions since the last Internal audit is: " + (temp - internalTransNumber) + "\n");
+                
+                }
+                System.out.println("INTERNAL BANK AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance);
+
+                internalTransNumber = temp;
+
+            } finally {
+                
+                lock.unlock();
+            }
+
+            
+        } else {
+            //do nothing 
+            System.out.println("Audit " + auditId + " could not access Account " + accountId + "\n");
         }
-    } else {
-        // couldn’t get the lock, skip this account
-        System.out.println("Audit " + auditId + " could not access Account " + accountId);
     }
-}
+
+    public void treasury(int treasuryId) {
+        int temp = transactionNumber;
+
+        if (lock.tryLock()) {
+            try {
+                if(temp - treasuryTransNumber != 0) {
+                    System.out.println("The total number of transactions since the last Treasury Department audit is: " + (temp - treasuryTransNumber));
+                }   
+                System.out.println("TREASURY DEPARTMENT AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance);
+
+            } finally {
+                lock.unlock();
+            }
+            
+
+        } else {
+            //do nothing 
+            System.out.println("Audit " + treasuryId + " could not access Account " + accountId);
+        }
+    }
 
 }

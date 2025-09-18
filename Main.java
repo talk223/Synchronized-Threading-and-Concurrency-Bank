@@ -9,6 +9,9 @@ import java.util.concurrent.Executors;
 public class Main {
     public static void main(String[] args) {
 
+        System.out.println(" * * * SIMULATION BEGINS...\n");
+        System.out.println("Deposit Agents \t\t\t Withdrawal Agents \t\t\t Balances \t\t\t\t\t\t Transaction Number");
+        System.out.println("============== \t\t\t ================= \t\t\t ======== \t\t\t\t\t\t ==================");
         
         BankAccount[] accounts = { new BankAccount(1, 0), new BankAccount(2, 0) };
         
