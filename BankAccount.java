@@ -1,6 +1,8 @@
 import java.io.FileWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.*;
 
 public class BankAccount {
@@ -187,56 +189,162 @@ public class BankAccount {
         }
     }
 
+    /*temp - internalTransNumber != 0*/
+    static int printOnce = 0;
 
-    public void internalAudit(int auditId) {
-        int temp = transactionNumber;
+    public static void internalAudit(int auditId, BankAccount[] accounts) {
+        List<Lock> acquiredLocks = new ArrayList<>();
 
-        if (lock.tryLock()) {
+
+        try {
             
-            try {
-                if (temp - internalTransNumber != 0) {
-                    System.out.println("The total number of transactions since the last Internal audit is: " + (temp - internalTransNumber) + "\n");
-                    simOutputCSV(new StringBuilder("The total number of transactions since the last Internal audit is: " + (temp - internalTransNumber) + "\n"));
-                
+            for (int i = 0; i < accounts.length; i++) {
+                if (accounts[i].getLock().tryLock()) {
+                    acquiredLocks.add(accounts[i].getLock());
+                } else {
+                    for (int j = 0; j < acquiredLocks.size(); j++) {
+                        acquiredLocks.get(j).unlock();
+                    }
+                    return; 
                 }
-                System.out.println("INTERNAL BANK AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance);
-
-                simOutputCSV(new StringBuilder("INTERNAL BANK AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance + "\n"));
-
-                internalTransNumber = temp;
-
-            } finally {
-                
-                lock.unlock();
             }
 
-            
-        } else {
-            //do nothing 
-            //System.out.println("Audit " + auditId + " could not access Account " + accountId + "\n");
+            int temp = transactionNumber;
+
+            System.out.println("*****************************************************************************\n\n");
+            System.out.println("Internal Bank Audit beginning...\n");
+
+            simOutputCSV(new StringBuilder("*****************************************************************************\n\n" +
+                "Internal Bank Audit beginning...\n"));
+
+            System.out.println("The total number of transactions since the last Internal audit is: "
+                               + (temp - internalTransNumber) + "\n");
+
+            simOutputCSV(new StringBuilder("The total number of transactions since the last Internal audit is: "
+                               + (temp - internalTransNumber) + "\n"));
+
+            for (int i = 0; i < accounts.length; i++) {
+                System.out.println("INTERNAL BANK AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-"
+                                   + accounts[i].getAccountId() + " TO BE: $" + accounts[i].getBalance());
+                simOutputCSV(new StringBuilder("INTERNAL BANK AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-"
+                                   + accounts[i].getAccountId() + " TO BE: $" + accounts[i].getBalance() + "\n"));
+            }
+
+            internalTransNumber = temp;
+
+            System.out.println("\nInternal Bank Audit complete.\n\n");
+            System.out.println("*****************************************************************************\n\n");
+            simOutputCSV(new StringBuilder("\nInternal Bank Audit complete.\n\n"));
+            simOutputCSV(new StringBuilder("*****************************************************************************\n\n"));
+
+        } finally {
+            for (int i = 0; i < acquiredLocks.size(); i++) {
+                acquiredLocks.get(i).unlock();
+            }
         }
+
+        // if (lock.tryLock()) {
+            
+        //     try {
+        //         if (printOnce == 0) {
+
+        //             System.out.println("The total number of transactions since the last Internal audit is: " + (temp - internalTransNumber) + "\n"); 
+
+        //             simOutputCSV(new StringBuilder("The total number of transactions since the last Internal audit is: " + (temp - internalTransNumber) + "\n"));
+        //             printOnce++;
+
+        //         }
+        //         System.out.println("INTERNAL BANK AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance);
+
+        //         simOutputCSV(new StringBuilder("INTERNAL BANK AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance + "\n"));
+
+        //         internalTransNumber = temp;
+
+        //     } finally {
+                
+        //         lock.unlock();
+        //     }
+
+            
+        // } else {
+        //     //do nothing 
+        //     //System.out.println("Audit " + auditId + " could not access Account " + accountId + "\n");
+        // }
     }
 
-    public void treasury(int treasuryId) {
-        int temp = transactionNumber;
+    public static void treasury(int treasuryId, BankAccount[] accounts) {
+        
+        List<Lock> acquiredLocks = new ArrayList<>();
 
-        if (lock.tryLock()) {
-            try {
-                if(temp - treasuryTransNumber != 0) {
-                    System.out.println("The total number of transactions since the last Treasury Department audit is: " + (temp - treasuryTransNumber));
-                    simOutputCSV(new StringBuilder("The total number of transactions since the last Treasury Department audit is: " + (temp - treasuryTransNumber) + "\n"));
-                }   
-                System.out.println("TREASURY DEPARTMENT AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance);
-                simOutputCSV(new StringBuilder("TREASURY DEPARTMENT AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance + "\n"));
-            } finally {
-                lock.unlock();
+
+        try {
+            
+            for (int i = 0; i < accounts.length; i++) {
+                if (accounts[i].getLock().tryLock()) {
+                    acquiredLocks.add(accounts[i].getLock());
+                } else {
+                    for (int j = 0; j < acquiredLocks.size(); j++) {
+                        acquiredLocks.get(j).unlock();
+                    }
+                    return; 
+                }
             }
+
+            int temp = transactionNumber;
+
+            System.out.println("*****************************************************************************\n\n");
+            System.out.println("UNITED STATES DEPARTMENT OF THE TREASURY - Bank Audit Beginning...\n");
+
+            BankAccount.simOutputCSV(new StringBuilder("*****************************************************************************\n\n" +
+                "UNITED STATES DEPARTMENT OF THE TREASURY - Bank Audit Beginning...\n"));
+
+            System.out.println("The total number of transactions since the last Treasury Department audit is: "
+                               + (temp - treasuryTransNumber) + "\n");
+
+            simOutputCSV(new StringBuilder("The total number of transactions since the last Treasury Department audit is: "
+                               + (temp - treasuryTransNumber) + "\n"));
+
+            for (int i = 0; i < accounts.length; i++) {
+                System.out.println("TREASURY DEPARTMENT AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accounts[i].getAccountId() + 
+                                    " TO BE: $" + accounts[i].getBalance());
+
+                simOutputCSV(new StringBuilder("TREASURY DEPARTMENT AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accounts[i].getAccountId() + 
+                            " TO BE: $" + accounts[i].getBalance() + "\n"));
+            }
+
+            internalTransNumber = temp;
+
+            System.out.println("\nUNITED STATES DEPARTMENT OF THE TREASURY - Bank Audit Terminated...\n\n");
+            System.out.println("*****************************************************************************\n\n");
+                
+            BankAccount.simOutputCSV(new StringBuilder("\nUNITED STATES DEPARTMENT OF THE TREASURY - Bank Audit Terminated...\n\n" +
+                "*****************************************************************************\n\n"));
+
+        } finally {
+            for (int i = 0; i < acquiredLocks.size(); i++) {
+                acquiredLocks.get(i).unlock();
+            }
+        }
+        
+        // int temp = transactionNumber;
+
+        // if (lock.tryLock()) {
+        //     try {
+        //         if(temp - treasuryTransNumber != 0) {
+        //             System.out.println("The total number of transactions since the last Treasury Department audit is: " + (temp - treasuryTransNumber));
+        //             simOutputCSV(new StringBuilder("The total number of transactions since the last Treasury Department audit is: " + (temp - treasuryTransNumber) + "\n"));
+        //         }   
+        //         System.out.println("TREASURY DEPARTMENT AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance);
+        //         simOutputCSV(new StringBuilder("TREASURY DEPARTMENT AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance + "\n"));
+        //     } finally {
+        //         lock.unlock();
+        //     }
             
 
-        } else {
-            //do nothing 
-            //System.out.println("Audit " + treasuryId + " could not access Account " + accountId);
-        }
+        // } else {
+        //     //do nothing 
+        //     //System.out.println("Audit " + treasuryId + " could not access Account " + accountId);
+        // }
     }
 
     public void flagFileCSV(StringBuilder line){
@@ -247,7 +355,7 @@ public class BankAccount {
                 System.out.println("Error writing invoice to CSV");
         }
     }
-    
+
     public static void simOutputCSV(StringBuilder line){
         try(FileWriter writer = new java.io.FileWriter("simulationOutput.csv", true)){
             writer.write(line.toString());

@@ -40,7 +40,7 @@ public class Main {
 
         InternalAudit audit1 = new InternalAudit(1, accounts);
 
-        // Treasury treasury1 = new Treasury(1, accounts);   
+        Treasury treasury1 = new Treasury(1, accounts);   
 
         try {
             executor.execute(depositor1);
@@ -65,7 +65,7 @@ public class Main {
 
             executor.execute(audit1);
 
-            // executor.execute(treasury1);    
+            executor.execute(treasury1);    
 
 
         } catch (Exception e) {

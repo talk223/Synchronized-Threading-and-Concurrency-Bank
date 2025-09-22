@@ -26,26 +26,11 @@ public class InternalAudit implements Runnable {
         
         while (true) {
             try {
-                System.out.println("*****************************************************************************\n\n");
-                System.out.println("Internal Bank Audit beginning...\n");
-
-                BankAccount.simOutputCSV(new StringBuilder("*****************************************************************************\n\n" +
-                    "Internal Bank Audit beginning...\n"));
-
-                for (int i = 0; i < accounts.length; i++) {
-                    accounts[i].internalAudit(auditId);
-                 
-                }
-
-                System.out.println("\nInternal Bank Audit complete.\n\n");
-                System.out.println("*****************************************************************************\n\n");
                 
-                BankAccount.simOutputCSV(new StringBuilder("\nInternal Bank Audit complete.\n\n" +
-                    "*****************************************************************************\n\n"));
+                BankAccount.internalAudit(auditId, accounts);
 
                 Thread.sleep(random.nextInt(MAXSLEEP) + 1);
                 Thread.yield();
-
 
             } catch (Exception e) {
                 Thread.currentThread().interrupt();

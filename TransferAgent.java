@@ -23,7 +23,7 @@ public class TransferAgent implements Runnable {
                     to = random.nextInt(accounts.length);
                 }
                 
-                int amount = random.nextInt(200) + 1; // Transfer between $1 and $200
+                int amount = random.nextInt(200) + 1; 
 
                 accounts[from].transfer(accounts[to], amount, agentId);
 
