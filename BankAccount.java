@@ -1,6 +1,7 @@
-import java.util.concurrent.locks.*;
-import java.time.format.DateTimeFormatter;
 import java.io.FileWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.locks.*;
 
 public class BankAccount {
 
@@ -9,6 +10,7 @@ public class BankAccount {
     private final Lock lock = new ReentrantLock();
 
     private final Condition sufficientFunds = lock.newCondition();
+    private LocalDateTime now = LocalDateTime.now();
 
     private static int transactionNumber = 0;
     private static int internalTransNumber = 0;
@@ -41,18 +43,25 @@ public class BankAccount {
             System.out.println("Agent DT" + agentId + " deposits " + amount + " into: JA-" 
                 + accountId + "\t (+) JA-" + accountId + " balance is $" + balance
                 + "\t\t\t\t\t\t\t\t\t" + transactionNumber + "\n");
+
+            simOutputCSV(new StringBuilder("Agent DT" + agentId + " deposits " + amount + " into: JA-" 
+                + accountId + "\t (+) JA-" + accountId + " balance is $" + balance
+                + "\t\t\t\t\t\t\t\t\t" + transactionNumber + "\n"));
+
             sufficientFunds.signalAll();
 
             if(amount >= 450){
                 flaggedTransacion.append("Agent DT").append(agentId)
-                    .append(" issued a deposit of $").append(amount + ".00 at: ").append(java.time.LocalDateTime.now().getDayOfMonth() + "/" 
-                    + java.time.LocalDateTime.now().getMonthValue() + "/" + java.time.LocalDateTime.now().getYear() + " ")
-                    .append(java.time.LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))+ " EST   Transaction Number: ").append(transactionNumber + "\n");
+                    .append(" issued a deposit of $").append(amount + ".00 at: ").append(now.getDayOfMonth() + "/" 
+                    + now.getMonthValue() + "/" + now.getYear() + " ")
+                    .append(now.format(DateTimeFormatter.ofPattern("HH:mm:ss"))+ " EST   Transaction Number: ").append(transactionNumber + "\n");
 
                 System.out.println("* * * FLAGGED TRANSACTION * * * --> Agent DT" + agentId 
                     + " Made A Deposit In Excess Of $450.00 USD - See Flagged Transactions Log.\n");
 
-                
+                simOutputCSV(new StringBuilder("* * * FLAGGED TRANSACTION * * * --> Agent DT" + agentId 
+                    + " Made A Deposit In Excess Of $450.00 USD - See Flagged Transactions Log.\n"));
+
                 flagFileCSV(flaggedTransacion);
             }
         } finally {
@@ -68,6 +77,10 @@ public class BankAccount {
                 try {
                     System.out.println("\t\t\t\tAgent WT" + agentId + " attempts to withdraw " + amount + " from Account JA-" 
                         + accountId + " (******) WITHDRAWL BLOCKED - INSUFFICIENT FUNDS!!!! Balance only $" + balance + "\n");
+
+                    simOutputCSV(new StringBuilder("\t\t\t\tAgent WT" + agentId + " attempts to withdraw " + amount + " from Account JA-" 
+                        + accountId + " (******) WITHDRAWL BLOCKED - INSUFFICIENT FUNDS!!!! Balance only $" + balance + "\n"));
+
                     sufficientFunds.await();
 
                 } catch (InterruptedException e) {
@@ -81,16 +94,23 @@ public class BankAccount {
             System.out.println("\t\t\t\tAgent WT" + agentId + " withdraws $" + amount + " from JA-" 
                 + accountId + "\t (-) JA-" + accountId + " balance is $" 
                 + balance + "\t\t\t\t\t" + transactionNumber + "\n");
-
+            
+            simOutputCSV(new StringBuilder("\t\t\t\tAgent WT" + agentId + " withdraws $" + amount + " from JA-" 
+                + accountId + "\t (-) JA-" + accountId + " balance is $"
+                + balance + "\t\t\t\t\t" + transactionNumber + "\n"));
+            
             if(amount >= 90){
 
                 flaggedTransaction.append("Agent WT").append(agentId)
-                    .append(" issued a Withdrawal of $").append(amount + ".00 at: ").append(java.time.LocalDateTime.now().getDayOfMonth() + "/" 
-                    + java.time.LocalDateTime.now().getMonthValue() + "/" + java.time.LocalDateTime.now().getYear() + " ")
-                    .append(java.time.LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))+ " EST   Transaction Number: ").append(transactionNumber + "\n");
+                    .append(" issued a Withdrawal of $").append(amount + ".00 at: ").append(now.getDayOfMonth() + "/" 
+                    + now.getMonthValue() + "/" + now.getYear() + " ")
+                    .append(now.format(DateTimeFormatter.ofPattern("HH:mm:ss"))+ " EST   Transaction Number: ").append(transactionNumber + "\n");
 
                 System.out.println("* * * FLAGGED TRANSACTION * * * --> Agent WT" + agentId 
                     + " Made A Withdrawal In Excess Of $90.00 USD - See Flagged Transactions Log.\n");
+
+                simOutputCSV(new StringBuilder("* * * FLAGGED TRANSACTION * * * --> Agent WT" + agentId 
+                    + " Made A Withdrawal In Excess Of $90.00 USD - See Flagged Transactions Log.\n"));
 
                 flagFileCSV(flaggedTransaction);
             }
@@ -131,12 +151,25 @@ public class BankAccount {
                                 + " from JA-" + this.accountId + " to JA-" + toAccount.getAccountId()
                                 + "-- JA-" + this.accountId + " balance is now $" + this.balance + "\t\t\t" + transactionNumber);
 
+                            simOutputCSV(new StringBuilder("TRANSFER --> Agent TR" + agentId + " transferring $" + amount
+                                + " from JA-" + this.accountId + " to JA-" + toAccount.getAccountId() + "\n"));
+
+
                             System.out.println("TRANSFER COMPLETE --> Account JA-" + toAccount.getAccountId() 
                                 + " balance now $" + toAccount.getBalance() + "\n");
+
+                            simOutputCSV(new StringBuilder("TRANSFER COMPLETE --> Account JA-" + toAccount.getAccountId() 
+                                + " balance now $" + toAccount.getBalance() + "\n"));
+
                         } else {
                             System.out.println("TRANSFER --> Agent TR" + agentId + " attempts to transfer $" + amount
                                     + " from JA-" + this.accountId + " to JA-" + toAccount.getAccountId() + 
-                                    ". Balnce only $" + this.balance + " (******) TRANSFER ABORTED - INSUFFICIENT FUNDS!!!\n");
+                                    ". Balance only $" + this.balance + " (******) TRANSFER ABORTED - INSUFFICIENT FUNDS!!!\n");
+                            
+                            simOutputCSV(new StringBuilder("TRANSFER --> Agent TR" + agentId + " attempts to transfer $" + amount
+                                    + " from JA-" + this.accountId + " to JA-" + toAccount.getAccountId() + 
+                                    ". Balance only $" + this.balance + " (******) TRANSFER ABORTED - INSUFFICIENT FUNDS!!!\n"));
+
                         }
                     } finally {
                         second.getLock().unlock();
@@ -163,9 +196,12 @@ public class BankAccount {
             try {
                 if (temp - internalTransNumber != 0) {
                     System.out.println("The total number of transactions since the last Internal audit is: " + (temp - internalTransNumber) + "\n");
+                    simOutputCSV(new StringBuilder("The total number of transactions since the last Internal audit is: " + (temp - internalTransNumber) + "\n"));
                 
                 }
                 System.out.println("INTERNAL BANK AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance);
+
+                simOutputCSV(new StringBuilder("INTERNAL BANK AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance + "\n"));
 
                 internalTransNumber = temp;
 
@@ -177,7 +213,7 @@ public class BankAccount {
             
         } else {
             //do nothing 
-            System.out.println("Audit " + auditId + " could not access Account " + accountId + "\n");
+            //System.out.println("Audit " + auditId + " could not access Account " + accountId + "\n");
         }
     }
 
@@ -188,9 +224,10 @@ public class BankAccount {
             try {
                 if(temp - treasuryTransNumber != 0) {
                     System.out.println("The total number of transactions since the last Treasury Department audit is: " + (temp - treasuryTransNumber));
+                    simOutputCSV(new StringBuilder("The total number of transactions since the last Treasury Department audit is: " + (temp - treasuryTransNumber) + "\n"));
                 }   
                 System.out.println("TREASURY DEPARTMENT AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance);
-
+                simOutputCSV(new StringBuilder("TREASURY DEPARTMENT AUDITOR FINDS CURRENT ACCOUNT BALANCE FOR JA-" + accountId + " TO BE: $" + balance + "\n"));
             } finally {
                 lock.unlock();
             }
@@ -198,7 +235,7 @@ public class BankAccount {
 
         } else {
             //do nothing 
-            System.out.println("Audit " + treasuryId + " could not access Account " + accountId);
+            //System.out.println("Audit " + treasuryId + " could not access Account " + accountId);
         }
     }
 
@@ -210,6 +247,14 @@ public class BankAccount {
                 System.out.println("Error writing invoice to CSV");
         }
     }
-
+    
+    public static void simOutputCSV(StringBuilder line){
+        try(FileWriter writer = new java.io.FileWriter("simulationOutput.csv", true)){
+            writer.write(line.toString());
+        } 
+        catch (Exception ex) {
+                System.out.println("Error writing invoice to CSV");
+        }
+    }
 
 }
